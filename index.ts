@@ -1,31 +1,30 @@
 import express from 'express';
+import data from './data/sample_data.js'; 
+import Library from './types/library.js';
+import bookRouter from './routers/route_a_book.js';
+
 const app = express();
 const PORT = 3000;
 
-import data from './data/sampleData.js';
-import Library from './types/library.js';
-import bookRouter from './routers/book.js';
 
-app.use(express.json());
+//To parse form data in POST request body:
+app.use(express.urlencoded({ extended: true }))
+// To parse incoming JSON in POST request body:
+app.use(express.json())
 
-app.get('/', (req, res) => {
-  res.send('Request a Book!');
-});
+app.use('/route_a_book', bookRouter)
 
-app.use('/books', bookRouter)
-
-// Retrieve all books: Implement a GET route to fetch all books from the JSON file and return them as a JSON response.
+// 1st To-Do
 bookRouter.get('/', (req, res) => {
-  const titles = data.map(book => book.title);
-  let myBook = JSON.stringify(data);
+  const titles = data.map(book => book.title); 
+  let myBook = JSON.stringify(data); 
 
   res.send(myBook);
 });
 
 
 
-//Retrieve a specific book: Implement a GET route that accepts a book ID as a path parameter and returns the corresponding book details from the JSON file.
-
+//2nd todo 
 bookRouter.get('/:id', (req, res) => {
 
   const bookId = parseInt(req.params.id);
@@ -34,13 +33,13 @@ bookRouter.get('/:id', (req, res) => {
   res.send(book);
 });
 
-//Add a new book: Implement a POST route that accepts book details in the request body and adds the book to the JSON file. The route should validate the input data and handle any error.
-bookRouter.post('/post', (req: Library.Request, res: Library.Response) => {
+//3rd todo 
+bookRouter.post('/post', (req: Library.Request, res: Library.Response) => { 
 
   const { title, author, publicationYear } = req.body;
 
   if (!req.body.title || !req.body.author || !req.body.publicationYear) {
-    res.status(400).send("Invalid input!")
+    res.status(400).send("invalid input!")
     return;
   }
 
@@ -56,19 +55,19 @@ bookRouter.post('/post', (req: Library.Request, res: Library.Response) => {
 });
 
 
-//Update a book: Implement a PUT route that accepts a book ID as a path parameter and updated book details in the request body. The route should update the corresponding book in the JSON file.
+//4th todo 
 bookRouter.put('/update/:id', (req, res) => {
   const bookId = req.params.id;
   const updatedBook = req.body;
 
   if (!updatedBook.title || !updatedBook.author || !updatedBook.publicationYear) {
-    res.status(400).send('Invalid input! Insert title, author, and publicationYear.');
+   res.status(400).send('Invalid input! Please provide title, author, and publicationYear.');
   }
 
-  const bookToUpdate = data.findIndex((book) => book.id === parseInt(bookId));
+  const bookToUpdate= data.findIndex((book) => book.id ===  parseInt(bookId));
 
   if (bookToUpdate === -1) {
-    res.status(404).send("Error!");
+   res.status(404).send("not found!");
   }
 
   data[bookToUpdate].title = updatedBook.title;
@@ -78,48 +77,80 @@ bookRouter.put('/update/:id', (req, res) => {
   res.json(data[bookToUpdate]);
 });
 
-// Delete a book: Implement a DELETE route that accepts a book ID as a path parameter and deletes the corresponding book from the JSON file.
+//5th todo 
 bookRouter.delete('/delete/:id', (req, res) => {
   const bookId = parseInt(req.params.id);
 
-  res.send(`The book with ${bookId} ID has been deleted ID:`);
+  console.log('Deleting book with ID:', bookId);
 
+  const bookIndex = data.findIndex((book) => book.id === bookId);
 
+  console.log('Book index:', bookIndex);
+
+  if (bookIndex === -1) {
+    console.log(' not found!');
+  }
+
+  data.splice(bookIndex, 1);
+
+  console.log('Book deleted successfully!');
+
+  res.status(200).send('Book deleted successfully!');
 });
 
 
-//Query books by name: Implement a GET route that accepts a book name as a query parameter and returns a list of books matching the provided name from the JSON file.
+//6th todo 
 bookRouter.get('/title', (req, res) => {
   const bookTitle = req.query.title as string;
 
   if (!bookTitle) {
-    return res.status(400).send("Book title not found.");
+    return res.status(400).send("Provide book title in query parameters.");
   }
 
-  //Find the book by title by converting all compared string to lower case .
+  // Find the book by its title (case-insensitive comparison)
   const book = data.find((book) => book.title.toLowerCase() === bookTitle.toLowerCase());
 
   if (!book) {
-    return res.status(404).send("Book not found!");
+    return res.status(404).send("not found!");
   }
 
   res.send(book);
 });
 
-//Query books by publishing year: Implement a GET route that accepts a publishing year as a query parameter and returns a list of books published in the provided year from the JSON file.
-bookRouter.get('/publicationYear/:publicationYear', (req, res) => {
-  const bookPublicationYear = parseInt(req.params.publicationYear);
-  const booksWithSamePublicationYear = data.filter((book) => book.publicationYear === bookPublicationYear);
-
-  res.send(booksWithSamePublicationYear);
-});
-
-
+//7th   
+  bookRouter.get('/pup/:publicationYear', (req, res) => {
+    const bookPup = parseInt(req.params.publicationYear);
+    const booksWithSamePup = data.filter((book) => book.publicationYear === bookPup);
+  
+    res.send(booksWithSamePup);
+  });
+  
 
 app.use((req, res) => {
-  res.status(404).send("EROOR! 404");
+  res.status(404).send("PAGE NOT FOUND!");
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`App is running and Listening on *${PORT}`);
 });
+
+
+// // Our fake database:
+// let comments = [
+//   {
+//     username: 'Todd',
+//     comment: 'lol that is so funny!'
+//   },
+//   {
+//     username: 'Skyler',
+//     comment: 'I like to go birdwatching with my dog'
+//   },
+//   {
+//     username: 'Sk8erBoi',
+//     comment: 'Plz delete your account, Todd'
+//   },
+//   {
+//     username: 'onlysayswoof',
+//     comment: 'woof woof woof'
+//   }
+// ]
